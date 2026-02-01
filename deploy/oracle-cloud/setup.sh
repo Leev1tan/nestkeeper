@@ -45,7 +45,7 @@ version: '3.8'
 
 services:
   nestkeeper:
-    image: ghcr.io/YOUR_USERNAME/nestkeeper:latest
+    image: ghcr.io/Leev1tan/nestkeeper:latest
     restart: unless-stopped
     volumes:
       - nestkeeper-data:/app/data

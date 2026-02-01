@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   nestkeeper:
-    image: ghcr.io/YOUR_USERNAME/nestkeeper:latest
+    image: ghcr.io/leev1tan/nestkeeper:latest
     # For local build instead of pulling from registry:
     # build:
     #   context: ../..

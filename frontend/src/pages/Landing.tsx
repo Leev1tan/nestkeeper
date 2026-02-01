@@ -217,7 +217,7 @@ export function Landing() {
           <div className="flex gap-6 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground">Features</a>
             <a href="#pricing" className="hover:text-foreground">Pricing</a>
-            <a href="https://github.com/YOUR_USERNAME/nestkeeper" className="hover:text-foreground">GitHub</a>
+            <a href="https://github.com/Leev1tan/nestkeeper" className="hover:text-foreground">GitHub</a>
           </div>
         </div>
       </footer>
