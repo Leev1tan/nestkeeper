@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm ls:*)",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__take_screenshot",
+      "Bash(Start-Sleep -Seconds 2)",
+      "Bash(Get-Content \"C:\\\\Users\\\\ZOHANA~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ZohanAdmin-NestKeeper\\\\tasks\\\\b2c75a8.output\" -Tail 15)",
+      "Bash(netstat:*)",
+      "Bash(./nestkeeper.exe)",
+      "Bash(curl:*)",
+      "mcp__chrome-devtools__list_pages",
+      "Bash(npm run dev:*)",
+      "Bash(go build:*)",
+      "WebSearch",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__evaluate_script"
+    ]
+  }
+}

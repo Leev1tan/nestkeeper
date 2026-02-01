@@ -1,0 +1,17 @@
+# Replace YOUR_DOMAIN.com with your actual domain
+YOUR_DOMAIN.com {
+    reverse_proxy nestkeeper:3000
+    encode gzip
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+}
+
+# Redirect www to non-www
+www.YOUR_DOMAIN.com {
+    redir https://YOUR_DOMAIN.com{uri} permanent
+}

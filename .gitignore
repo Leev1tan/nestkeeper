@@ -1,0 +1,48 @@
+# Binaries
+nestkeeper
+nestkeeper.exe
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Data directory (keep structure, ignore contents)
+data/*.db
+data/*.db-journal
+data/*.db-shm
+data/*.db-wal
+data/documents/*
+data/backups/*
+!data/.gitkeep
+!data/documents/.gitkeep
+!data/backups/.gitkeep
+
+# Frontend build output
+web/dist/
+
+# Frontend dependencies
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage.out
+coverage.html
+
+# Debug
+debug
+*.log

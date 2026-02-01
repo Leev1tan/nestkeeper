@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  nestkeeper:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - nestkeeper-data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/nestkeeper.db
+      - PORT=3000
+    restart: unless-stopped
+
+volumes:
+  nestkeeper-data:

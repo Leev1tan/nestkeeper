@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  nestkeeper:
+    build: ..
+    restart: unless-stopped
+    volumes:
+      - nestkeeper-data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/nestkeeper.db
+      - PORT=3000
+    networks:
+      - web
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - web
+    depends_on:
+      - nestkeeper
+
+networks:
+  web:
+
+volumes:
+  nestkeeper-data:
+  caddy-data:
+  caddy-config:
