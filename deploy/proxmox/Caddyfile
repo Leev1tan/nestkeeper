@@ -1,0 +1,12 @@
+# Replace YOUR_SUBDOMAIN with your DuckDNS subdomain
+# Example: nestkeeper.duckdns.org
+YOUR_SUBDOMAIN.duckdns.org {
+    reverse_proxy nestkeeper:3000
+    encode gzip
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+}

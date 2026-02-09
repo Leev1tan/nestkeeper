@@ -1,0 +1,49 @@
+services:
+  nestkeeper:
+    image: ghcr.io/leev1tan/nestkeeper:latest
+    # To build locally instead of pulling:
+    # build:
+    #   context: ../..
+    #   dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - nestkeeper-data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/nestkeeper.db
+      - UPLOAD_PATH=/app/data/documents
+      - BACKUP_PATH=/app/data/backups
+      - PORT=3000
+      - ENVIRONMENT=production
+    networks:
+      - web
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - web
+    depends_on:
+      nestkeeper:
+        condition: service_healthy
+
+networks:
+  web:
+    driver: bridge
+
+volumes:
+  nestkeeper-data:
+  caddy-data:
+  caddy-config:
