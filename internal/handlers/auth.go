@@ -196,6 +196,6 @@ func setSessionCookie(c echo.Context, sessionID string, expiresAt time.Time) {
 		Expires:  expiresAt,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		// Secure: true, // Enable in production with HTTPS
+		Secure:   true,
 	})
 }

@@ -1,36 +1,26 @@
-version: '3.8'
-
 services:
   nestkeeper:
-    build: ..
+    image: nestkeeper:latest
+    container_name: nestkeeper
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
     volumes:
       - nestkeeper-data:/app/data
     environment:
       - DATABASE_PATH=/app/data/nestkeeper.db
       - PORT=3000
-    networks:
-      - web
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
-    networks:
-      - web
-    depends_on:
-      - nestkeeper
-
-networks:
-  web:
+      - ENVIRONMENT=production
+      - APP_URL=${APP_URL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PRO_PRICE_ID=${STRIPE_PRO_PRICE_ID}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
 
 volumes:
   nestkeeper-data:
-  caddy-data:
-  caddy-config:

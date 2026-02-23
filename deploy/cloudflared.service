@@ -1,0 +1,15 @@
+[Unit]
+Description=Cloudflare Tunnel for NestKeeper
+After=network.target docker.service
+Wants=network.target
+
+[Service]
+User=vovan
+ExecStart=/usr/bin/cloudflared tunnel --url http://localhost:3000
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

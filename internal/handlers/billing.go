@@ -10,7 +10,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stripe/stripe-go/v76"
-	"github.com/stripe/stripe-go/v76/checkout/session"
+	"github.com/stripe/stripe-go/v76/billingportal/session"
+	checkoutsession "github.com/stripe/stripe-go/v76/checkout/session"
 	"github.com/stripe/stripe-go/v76/customer"
 	"github.com/stripe/stripe-go/v76/webhook"
 
@@ -101,7 +102,7 @@ func CreateCheckoutSession(c echo.Context) error {
 		CancelURL:  stripe.String(cancelURL),
 	}
 
-	sess, err := session.New(params)
+	sess, err := checkoutsession.New(params)
 	if err != nil {
 		log.Printf("Failed to create checkout session: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create checkout"})
@@ -140,13 +141,8 @@ func CreatePortalSession(c echo.Context) error {
 	})
 }
 
-// Simplified portal session creation
 func createPortalSession(params *stripe.BillingPortalSessionParams) (*stripe.BillingPortalSession, error) {
-	// This would normally use the billingportal/session package
-	// For simplicity, we'll just return the customer portal URL
-	return &stripe.BillingPortalSession{
-		URL: "https://billing.stripe.com/p/login/test",
-	}, nil
+	return session.New(params)
 }
 
 // HandleWebhook processes Stripe webhook events

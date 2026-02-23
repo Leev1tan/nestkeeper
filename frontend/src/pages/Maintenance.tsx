@@ -4,7 +4,7 @@ import { Wrench, Plus, CheckCircle, AlertTriangle, Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, Select } from '@/components/ui/input'
-import { api, type CreateMaintenanceData, type Property } from '@/lib/api'
+import { api, type CreateMaintenanceData } from '@/lib/api'
 import { formatDate, formatCurrency } from '@/lib/utils'
 
 export function Maintenance() {
