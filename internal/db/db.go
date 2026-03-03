@@ -66,6 +66,7 @@ func Migrate() error {
 		&models.Document{},
 		&models.Appliance{},
 		&models.Setting{},
+		&models.EnergyReading{},
 	)
 	if err != nil {
 		return err

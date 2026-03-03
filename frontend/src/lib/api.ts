@@ -77,6 +77,14 @@ export const api = {
   completeTask: (id: string, data: CompleteTaskData) =>
     request(`/maintenance/${id}/complete`, { method: 'POST', body: JSON.stringify(data) }),
 
+  // Energy
+  getEnergyReadings: (propertyId?: string, year?: string) =>
+    request<EnergyReading[]>(`/energy${propertyId ? `?propertyId=${propertyId}` : ''}${year ? `${propertyId ? '&' : '?'}year=${year}` : ''}`),
+  createEnergyReading: (data: CreateEnergyReadingData) =>
+    request<EnergyReading>('/energy', { method: 'POST', body: JSON.stringify(data) }),
+  deleteEnergyReading: (id: string) =>
+    request(`/energy/${id}`, { method: 'DELETE' }),
+
   // Reports
   getTaxReport: (year: number) => request<TaxReport>(`/reports/tax/${year}`),
   getCashFlow: (startDate: string, endDate: string) =>
@@ -300,6 +308,30 @@ export interface TaxReport {
     netIncome: number
     byCategory?: Record<string, number>
   }
+}
+
+export interface EnergyReading {
+  id: string
+  propertyId: string
+  readingDate: string
+  gridImportKwh: number
+  solarGeneratedKwh: number
+  gridExportKwh: number
+  gridPricePerKwh: number
+  notes?: string
+  solarSavings: number
+  gridCost: number
+  exportEarnings: number
+}
+
+export interface CreateEnergyReadingData {
+  propertyId: string
+  readingDate: string
+  gridImportKwh: number
+  solarGeneratedKwh: number
+  gridExportKwh: number
+  gridPricePerKwh: number
+  notes?: string
 }
 
 export interface CashFlowReport {

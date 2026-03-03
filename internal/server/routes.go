@@ -83,6 +83,12 @@ func RegisterRoutes(e *echo.Echo) {
 	maintenance.POST("/:id/complete", handlers.CompleteMaintenanceTask)
 	maintenance.DELETE("/:id", handlers.DeleteMaintenanceTask)
 
+	// Energy
+	energy := protected.Group("/energy")
+	energy.GET("", handlers.ListEnergyReadings)
+	energy.POST("", handlers.CreateEnergyReading)
+	energy.DELETE("/:id", handlers.DeleteEnergyReading)
+
 	// Documents
 	documents := protected.Group("/documents")
 	documents.GET("", handlers.ListDocuments)

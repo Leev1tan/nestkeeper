@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Building, Users, FileSignature, DollarSign, Wrench, Receipt, BarChart3, LogOut, Settings } from 'lucide-react'
+import { Home, Building, Users, FileSignature, DollarSign, Wrench, Receipt, BarChart3, LogOut, Settings, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: '/app/rent', icon: DollarSign, label: 'Rent' },
   { href: '/app/maintenance', icon: Wrench, label: 'Tasks' },
   { href: '/app/expenses', icon: Receipt, label: 'Expenses' },
+  { href: '/app/energy', icon: Zap, label: 'Energy' },
   { href: '/app/reports', icon: BarChart3, label: 'Reports' },
 ]
 

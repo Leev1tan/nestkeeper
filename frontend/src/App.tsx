@@ -13,6 +13,7 @@ import { Maintenance } from '@/pages/Maintenance'
 import { Expenses } from '@/pages/Expenses'
 import { Reports } from '@/pages/Reports'
 import { Settings } from '@/pages/Settings'
+import { Energy } from '@/pages/Energy'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +83,7 @@ function AppRoutes() {
                 <Route path="/maintenance" element={<Maintenance />} />
                 <Route path="/expenses" element={<Expenses />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/energy" element={<Energy />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/app" replace />} />
               </Routes>
