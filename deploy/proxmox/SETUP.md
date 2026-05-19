@@ -98,6 +98,8 @@ docker compose pull
 docker compose up -d
 ```
 
+Note: `cloudflared` is pinned to `cloudflare/cloudflared:2024.10.0`. `docker compose pull` will refresh `nestkeeper` to the latest image, but cloudflared stays on the pinned tag. To upgrade cloudflared, edit `image:` in `/opt/nestkeeper/docker-compose.yml` to a newer tag (see https://github.com/cloudflare/cloudflared/releases), then re-run `docker compose pull && docker compose up -d`.
+
 ## Backup & Restore
 
 ### Backup
