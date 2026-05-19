@@ -1,10 +1,6 @@
 services:
   nestkeeper:
     image: ghcr.io/leev1tan/nestkeeper:latest
-    # To build locally instead of pulling:
-    # build:
-    #   context: ../..
-    #   dockerfile: Dockerfile
     restart: unless-stopped
     volumes:
       - nestkeeper-data:/app/data
@@ -23,16 +19,12 @@ services:
       retries: 3
       start_period: 15s
 
-  caddy:
-    image: caddy:2-alpine
+  cloudflared:
+    image: cloudflare/cloudflared:2024.10.0
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}
+    env_file:
+      - .env
     networks:
       - web
     depends_on:
@@ -45,5 +37,3 @@ networks:
 
 volumes:
   nestkeeper-data:
-  caddy-data:
-  caddy-config:
