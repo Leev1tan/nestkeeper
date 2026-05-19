@@ -33,7 +33,7 @@ echo "     allowlisted emails: admin@pbxes.com.ua, vshabat64@gmail.com"
 echo ""
 echo "See deploy/proxmox/SETUP.md for the step-by-step walkthrough."
 echo ""
-read -p "Paste the Cloudflare Tunnel token: " CF_TUNNEL_TOKEN
+read -s -p "Paste the Cloudflare Tunnel token: " CF_TUNNEL_TOKEN
 echo ""
 
 if [ -z "$CF_TUNNEL_TOKEN" ]; then
