@@ -1,45 +1,63 @@
-# Deploy NestKeeper on Proxmox LXC
+# Deploy NestKeeper on Proxmox LXC (Cloudflare Tunnel + Access)
 
-Free deployment using your Proxmox server + DuckDNS. Total cost: $0.
+Self-hosted on a Proxmox LXC, exposed via Cloudflare Tunnel at `nestkeeper.pp.ua`, locked down with Cloudflare Access (only two Google-allowlisted emails can reach the app at all).
+
+No inbound ports opened on your router. Origin IP hidden from the public internet.
 
 ## Prerequisites
 
-- Proxmox VE host with a public IP (or port forwarding for 80/443)
-- Internet access from the LXC container
+- Proxmox VE host
+- LXC container with internet access
+- Domain `nestkeeper.pp.ua` on Cloudflare nameservers (already done)
+- A Google account for each person who should access the app
 
-## Step 1: Create LXC Container in Proxmox
+## Step 1: Create the LXC container
 
-1. **Download template** (if not already available):
-   - Proxmox UI → local storage → CT Templates → Templates
-   - Download: `ubuntu-22.04-standard`
-
-2. **Create container:**
-   - Click "Create CT" in top right
-   - **General:** Pick a CT ID (e.g., 200), set hostname to `nestkeeper`, set a root password
-   - **Template:** Select `ubuntu-22.04-standard`
-   - **Disks:** 4 GB (minimum, 8 GB recommended)
+1. Proxmox UI → local storage → CT Templates → download `ubuntu-22.04-standard` if not present.
+2. Click **Create CT**:
+   - **General:** CT ID e.g. 200, hostname `nestkeeper`, set a root password
+   - **Template:** `ubuntu-22.04-standard`
+   - **Disks:** 8 GB recommended
    - **CPU:** 1 core
    - **Memory:** 512 MB RAM, 256 MB swap
-   - **Network:** Bridge `vmbr0`, set your public IP (static) or DHCP
+   - **Network:** Bridge `vmbr0`, DHCP is fine (no public IP needed — outbound only)
+3. **Enable nesting** (required for Docker): Container → Options → Features → check **Nesting**. If you need FUSE, check that too.
+4. Start the container.
 
-3. **Enable nesting (REQUIRED for Docker):**
-   - Select your container → Options → Features
-   - Check **Nesting**
-   - If you need FUSE (for overlayfs): also check **FUSE**
+## Step 2: Create the Cloudflare Tunnel
 
-4. **Start the container**
+In the Cloudflare dashboard:
 
-## Step 2: Get a Free Domain (DuckDNS)
+1. Open **Zero Trust** (zero-trust dashboard).
+2. **Networks → Tunnels → Create a tunnel**.
+3. Connector: **Cloudflared**. Tunnel name: `nestkeeper`. Save.
+4. The next screen shows install instructions for various platforms — pick **Docker**. **Copy the long token** that follows `--token` in the displayed `docker run` command. (This is what you'll paste into `setup.sh`.)
+5. Click **Next** to go to the **Public Hostname** step:
+   - **Subdomain:** `nestkeeper`
+   - **Domain:** `pp.ua`
+   - **Path:** leave blank
+   - **Type:** `HTTP`
+   - **URL:** `nestkeeper:3000`
+6. **Save tunnel**. Cloudflare will auto-create a CNAME DNS record for `nestkeeper.pp.ua`.
 
-1. Go to [duckdns.org](https://www.duckdns.org)
-2. Login with Google/GitHub/Reddit
-3. Create a subdomain (e.g., `nestkeeper` → gives you `nestkeeper.duckdns.org`)
-4. Set the IP to your server's public IP
-5. Click "update ip"
+## Step 3: Create the Cloudflare Access application
 
-## Step 3: Run Setup Script
+In **Zero Trust → Access → Applications**:
 
-SSH into your LXC container and run:
+1. **Add an application → Self-hosted**.
+2. **Application name:** `NestKeeper`
+3. **Session duration:** `24 hours`
+4. **Application domain:** `nestkeeper.pp.ua`
+5. **Identity providers:** check **Google** (Cloudflare provides this built-in; click it and follow the one-time consent flow if it's your first Access app).
+6. Next → **Add a policy**:
+   - **Policy name:** `Owners`
+   - **Action:** `Allow`
+   - **Configure rules → Include → Selector: Emails → Value:** add `admin@pbxes.com.ua` and `vshabat64@gmail.com`.
+7. Save. Skip CORS, advanced, etc.
+
+## Step 4: Run setup on the LXC
+
+SSH to the LXC and run:
 
 ```bash
 apt update && apt install -y curl
@@ -47,31 +65,32 @@ curl -fsSL https://raw.githubusercontent.com/Leev1tan/nestkeeper/main/deploy/pro
 bash setup.sh
 ```
 
-The script will:
-- Ask for your DuckDNS subdomain
-- Install Docker
-- Create the config files
-- Pull and start NestKeeper + Caddy
-- Set up auto HTTPS via Let's Encrypt
+The script will prompt for the Cloudflare Tunnel token (from Step 2.4). Paste it. The script then installs Docker, writes `/opt/nestkeeper/docker-compose.yml` and `/opt/nestkeeper/.env`, and brings the stack up.
 
-## Step 4: Verify
+## Step 5: Verify
 
 ```bash
-# Check containers are running
+# Containers running?
 docker compose -f /opt/nestkeeper/docker-compose.yml ps
 
-# Check health
-curl http://localhost:3000/api/health
+# Tunnel registered?
+docker compose -f /opt/nestkeeper/docker-compose.yml logs cloudflared | grep -i "registered tunnel connection"
 
-# Check logs if something is wrong
-docker compose -f /opt/nestkeeper/docker-compose.yml logs -f
+# App healthy?
+docker compose -f /opt/nestkeeper/docker-compose.yml exec nestkeeper wget -q -O- http://localhost:3000/api/health
 ```
 
-Then open `https://YOUR_SUBDOMAIN.duckdns.org` in your browser.
+Expected:
+- `docker compose ps` shows both services running; `nestkeeper` shows `healthy`.
+- `cloudflared` logs show one or more `Registered tunnel connection` lines.
+- The health endpoint returns 200.
+
+Then open `https://nestkeeper.pp.ua` in a browser:
+1. Cloudflare Access login page → "Sign in with Google" → enter Google credentials for one of the allowlisted emails.
+2. After successful login, the NestKeeper login page appears. Log in as normal.
+3. Try from a different Google account (not allowlisted) → you should see Cloudflare's "access denied" page.
 
 ## Updating NestKeeper
-
-When a new version is pushed to GitHub:
 
 ```bash
 cd /opt/nestkeeper
@@ -82,56 +101,69 @@ docker compose up -d
 ## Backup & Restore
 
 ### Backup
+
 ```bash
 cd /opt/nestkeeper
 docker compose exec nestkeeper cp /app/data/nestkeeper.db /app/data/backup-$(date +%Y%m%d).db
-# Copy to host
 docker cp $(docker compose ps -q nestkeeper):/app/data/backup-$(date +%Y%m%d).db ./
 ```
 
 ### Restore
+
 ```bash
 cd /opt/nestkeeper
 docker cp ./backup.db $(docker compose ps -q nestkeeper):/app/data/nestkeeper.db
 docker compose restart nestkeeper
 ```
 
+## Adding or removing allowed users
+
+Edit the Access policy in **Zero Trust → Access → Applications → NestKeeper → Policies → Owners → Configure rules**. Add or remove emails. Changes take effect immediately. No LXC changes needed.
+
 ## Troubleshooting
 
 ### Docker won't start in LXC
-Make sure **nesting** is enabled:
-```
-Proxmox UI → Container → Options → Features → check "nesting"
-```
-Then restart the container from Proxmox UI.
 
-### HTTPS not working / SSL error
-- Make sure ports 80 and 443 are reachable from the internet
-- Check that your DuckDNS IP matches your server: `curl ifconfig.me`
-- Wait 1-2 minutes for Let's Encrypt to issue the certificate
-- Check Caddy logs: `docker compose logs caddy`
+Make sure **nesting** is enabled in Proxmox: Container → Options → Features → check `nesting`, then restart the container.
+
+### `cloudflared` logs show authentication errors
+
+The token in `/opt/nestkeeper/.env` is invalid, revoked, or for a different tunnel. Re-copy the token from Cloudflare → Zero Trust → Networks → Tunnels → `nestkeeper` → **Edit → Cloudflared → Reveal token**. Update `.env`, then:
+
+```bash
+cd /opt/nestkeeper
+docker compose up -d cloudflared
+```
+
+### "DNS resolution failed" when visiting the URL
+
+Cloudflare should have auto-created the CNAME for `nestkeeper.pp.ua` when you added the public hostname. Verify in Cloudflare → DNS → Records: you should see a CNAME for `nestkeeper` pointing to `<tunnel-uuid>.cfargotunnel.com`. If absent, re-save the public hostname in the tunnel config.
+
+### App can't be reached even though tunnel is up
+
+Confirm the public hostname URL is `nestkeeper:3000` (the **docker-compose service name**, not `localhost`). `cloudflared` runs in the same docker network as `nestkeeper`, so it resolves `nestkeeper` via docker DNS.
 
 ### Container can't pull images
+
 ```bash
-# Check DNS
 ping -c 1 google.com
-
-# If DNS fails, set it manually
-echo "nameserver 8.8.8.8" > /etc/resolv.conf
-```
-
-### Port forwarding (if LXC has private IP)
-On your Proxmox host, forward ports 80/443 to the LXC:
-```bash
-# Replace LXC_IP with your container's IP
-iptables -t nat -A PREROUTING -i vmbr0 -p tcp --dport 80 -j DNAT --to LXC_IP:80
-iptables -t nat -A PREROUTING -i vmbr0 -p tcp --dport 443 -j DNAT --to LXC_IP:443
-iptables -t nat -A POSTROUTING -o vmbr0 -j MASQUERADE
+# if DNS fails inside the LXC:
+echo "nameserver 1.1.1.1" > /etc/resolv.conf
 ```
 
 ## Resource Usage
 
-NestKeeper is lightweight:
-- **RAM:** ~30 MB (app) + ~15 MB (Caddy) = ~45 MB total
-- **Disk:** ~200 MB (Docker images) + database
-- **CPU:** Near zero at idle
+- **RAM:** ~30 MB (Go app) + ~25 MB (cloudflared) = ~55 MB total
+- **Disk:** ~150 MB (Docker images) + database growth
+- **CPU:** Near zero at idle; cloudflared adds a small amount under load
+
+## Security model
+
+| Layer | Defends against |
+|---|---|
+| No open inbound ports | Port scanners, exposing home IP |
+| Cloudflare Access (Google + email allowlist) | Random users hitting the app at all |
+| App session auth | Compromised Cloudflare session or insider |
+| TLS end-to-end | Snooping (browser↔CF: TLS; CF↔origin: mTLS over tunnel) |
+
+The two allowlisted emails are the **only** identities that can reach the NestKeeper login page. Everyone else is blocked at Cloudflare's edge before the LXC sees a packet.
